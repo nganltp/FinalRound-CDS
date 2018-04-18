@@ -41,7 +41,7 @@ using namespace cv::ml;
 #define GREEN_MAX Scalar(83, 246, 124)
 
 #define LOW_HSV_BLACK Scalar(0, 0, 0)
-#define HIG_HSV_BLACK Scalar(255, 255, 130)
+#define HIG_HSV_BLACK Scalar(255, 240, 183)
 
 #define KERNEL_SIZE 3
 #define SIGN_SIZE 32
@@ -55,7 +55,7 @@ using namespace cv::ml;
 #define TEST_DETECT_SIGN 0
 #define ACCEPT_SIGN 1
 #define N_SAMPLE 1
-#define ALPHA 1.5
+#define ALPHA 2.0
 
 #define SW1_PIN 160
 #define SW2_PIN 161

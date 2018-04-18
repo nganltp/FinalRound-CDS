@@ -47,8 +47,9 @@ void filterLane(const Mat &imgLane, bool &isLine, int &centerX, int check)
     result.copyTo(imgLane);
 }
 
-void LaneProcessing(Mat& colorImg, Mat& binImg, Point &centerPoint, Point &centerLeft, Point &centerRight) 
+void LaneProcessing(Mat& colorImg, Mat& binImg, Point &centerPoint, Point &centerLeft, Point &centerRight, int &space) 
 {
+   
     // Define rect to crop binImg into Left and Right
     int xLeftRect = 0;
     int yLeftRect = (1 - RATIO_HEIGHT_LANE_CROP) * binImg.rows;
@@ -78,7 +79,7 @@ void LaneProcessing(Mat& colorImg, Mat& binImg, Point &centerPoint, Point &cente
     imshow("LEFT", binLeft);
     imshow("RIGHT", binRight);
     cout << "Left: " << isLeft << " Right: " << isRight << endl;
-    
+  /* OLd  
     if (isLeft)
         centerLeft.x += xLeftRect;
     else // Lose center point => get the previous
@@ -95,13 +96,51 @@ void LaneProcessing(Mat& colorImg, Mat& binImg, Point &centerPoint, Point &cente
     }
     
     // Backup
+    
     centerPoint.x = (centerLeft.x + centerRight.x) / 2;
     centerPoint.y = centerLeft.y = centerRight.y = (1 - CENTER_POINT_Y) * binImg.rows;
 
-    // Draw center points
+*/////Vuong
+cout<<"space"           <<space<<endl;
+        if(isLeft && isRight)
+    {
+        space=(centerRight.x - centerLeft.x);
+         centerLeft.x += xLeftRect;
+         centerRight.x += xRightRect;
+         centerPoint.x = (centerLeft.x + centerRight.x) / 2;
+         centerPoint.y = centerLeft.y = centerRight.y = (1 - CENTER_POINT_Y) * binImg.rows;
+
+        circle(colorImg, centerPoint, 2, Scalar(255, 255, 0), 3);
+        circle(colorImg, centerLeft, 2, Scalar(255, 0, 255), 3);
+        circle(colorImg, centerRight, 2, Scalar(0, 255, 255), 3);
+        putText(colorImg, "Left - Right", Point(60, 100), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);
+         
+    }
+    if(!isLeft && isRight)
+    {
+    centerRight.x += xRightRect;
+    centerPoint.x = centerRight.x - space-50;
+    centerPoint.y = centerLeft.y = centerRight.y = (1 - CENTER_POINT_Y) * binImg.rows;
+    circle(colorImg, centerPoint, 2, Scalar(255, 255, 0), 3);
+    circle(colorImg, centerRight, 2, Scalar(0, 255, 255), 3);
+    putText(colorImg, "Right", Point(60, 100), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);
+    
+    }
+    if(isLeft && !isRight)
+    {
+    centerLeft.x += xLeftRect;
+    centerPoint.x = centerLeft.x + space;
+    centerPoint.y = centerLeft.y = centerRight.y = (1 - CENTER_POINT_Y) * binImg.rows;
     circle(colorImg, centerPoint, 2, Scalar(255, 255, 0), 3);
     circle(colorImg, centerLeft, 2, Scalar(255, 0, 255), 3);
-    circle(colorImg, centerRight, 2, Scalar(0, 255, 255), 3);
+    putText(colorImg, "Left ", Point(60, 100), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);
+    
+    }
+    
+    // Draw center points
+    /*circle(colorImg, centerPoint, 2, Scalar(255, 255, 0), 3);
+    circle(colorImg, centerLeft, 2, Scalar(255, 0, 255), 3);
+    circle(colorImg, centerRight, 2, Scalar(0, 255, 255), 3);*/
     imshow("color", colorImg);
 }
 

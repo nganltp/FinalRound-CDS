@@ -14,6 +14,42 @@
 #include "lane_detection.h"
 #include "sign.h"
 #include "control.h"
+#include <thread>
+
+Point carPosition(FRAME_WIDTH / 2, FRAME_HEIGHT);
+void ProcessCarRun(double& theta,Point centerPoint,PCA9685*& pca9685) {
+    theta = getTheta(carPosition, centerPoint);
+
+    if (-20 < theta && theta < 20)
+        theta = 0;
+            
+    cout << "angdiff: " << theta << endl;
+    theta = -(theta * ALPHA);
+                
+    api_set_STEERING_control(pca9685, theta);
+
+    return;
+}
+void getTraffic(Sign& mySign,Mat& colorImg,Mat& grayImg) {
+    mySign.recognize(grayImg);
+    int signID = mySign.getClassID();
+	//cout << "signID: " << signID << endl;
+	if (signID==1)
+	putText(colorImg, "TURN LEFT", Point(60, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);
+	else if(signID==2)
+		putText(colorImg, "TURN RIGHT", Point(60, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);
+	else if(signID==3)
+		putText(colorImg, "STOP", Point(60, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);
+}
+
+//Atomic<cv::Mat> mainImage;
+//bool hasSign;
+//int signId;
+
+void ProcessSignTraffic() {
+    // detect
+    // recognize
+}
 
 int main(int argc, char *argv[])
 {
@@ -58,7 +94,7 @@ int main(int argc, char *argv[])
         
         //gray_videoWriter.open(gray_filename, codec, 8, output_size, false);
         color_videoWriter.open(color_filename, codec, 8, output_size, true);
-        // depth_videoWriter.open(depth_filename, codec, 8, output_size, false);
+        // dedetectpth_videoWriter.open(depth_filename, codec, 8, output_size, false);
     }
     
     // Init direction and ESC speed  //
@@ -76,7 +112,7 @@ int main(int argc, char *argv[])
 
     fprintf(stderr, "Initial throttle: %d\n", set_throttle_val);
     
-    Point carPosition(FRAME_WIDTH / 2, FRAME_HEIGHT);
+    //Point carPosition(FRAME_WIDTH / 2, FRAME_HEIGHT);
     Point prvPosition = carPosition;
 
     // Car running status
@@ -98,6 +134,8 @@ int main(int argc, char *argv[])
     Point centerPoint(0, (1 - CENTER_POINT_Y) * binImg.rows);
     Point centerLeft(0, (1 - CENTER_POINT_Y) * binImg.rows);
     Point centerRight(0, (1 - CENTER_POINT_Y) * binImg.rows);
+
+            int space;
     
     // Run loop
     while (true)
@@ -210,30 +248,18 @@ int main(int argc, char *argv[])
             imshow("binImg", binImg);
 	        //imshow("signMask", signMask);		
                 
-	        // Traffic sign detection and recognition
-            // if(mySign.detect(signMask)) {
-            //     mySign.recognize(grayImg);
-            //     int signID = mySign.getClassID();
-			//     //cout << "signID: " << signID << endl;
-			//     if (signID==1)
-			//     	putText(colorImg, "TURN LEFT", Point(60, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);
-		    // 	else if(signID==2)
-			// 	    putText(colorImg, "TURN RIGHT", Point(60, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);
-			//     else if(signID==3)
-			// 	    putText(colorImg, "STOP", Point(60, 60), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);
-            // }
+	        //Traffic sign detection and recognition
+            if(mySign.detect(signMask)) {
+                ProcessSignTraffic();
+            }
 	        // Process lane to get center pPoint
-            LaneProcessing(colorImg, binImg, centerPoint, centerLeft, centerRight);
+            LaneProcessing(colorImg, binImg, centerPoint, centerLeft, centerRight,space);
             
-		    theta = getTheta(carPosition, centerPoint);
 
-            if (-20 < theta && theta < 20)
-                theta = 0;
-            
-            cout << "angdiff: " << theta << endl;
-            theta = -(theta * ALPHA);
-                
-            api_set_STEERING_control(pca9685, theta);
+            ProcessCarRun(theta,centerPoint,pca9685);
+		    
+
+
             api_set_FORWARD_control(pca9685, throttle_val);
             
             et = getTickCount();
