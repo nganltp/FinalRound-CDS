@@ -302,7 +302,7 @@ api_kinect_cv_get_images(VideoCapture &capture,
 
 int main()
 {
-    Mat depthMap,grayImage;
+    Mat depthMap,grayImage, bgrImage;
 	VideoCapture capture;
 	capture.open( CV_CAP_OPENNI2 );
 	if( !capture.isOpened() )
@@ -312,6 +312,7 @@ int main()
     }
 	capture.set( CV_CAP_OPENNI_IMAGE_GENERATOR_OUTPUT_MODE, CV_CAP_OPENNI_VGA_30HZ );
     capture.set(CV_CAP_OPENNI_DEPTH_GENERATOR_REGISTRATION, 0 );
+	//imshow( "Capture", capture );
 	
 
 	//call funtion get depthImg
@@ -323,6 +324,7 @@ int main()
     createTrackbar("thresh_area_max", "Threshold Selection", &thresh_area_max, 1000, on_thresh_area_max_thresh_trackbar);
     while ((char)waitKey(1) != 'q')
     {
+	//imshow("Capture",capture);
 	api_kinect_cv_get_images( capture, depthMap, grayImage);
 			if( !capture.retrieve( bgrImage, CV_CAP_OPENNI_BGR_IMAGE ) )
 	        {
