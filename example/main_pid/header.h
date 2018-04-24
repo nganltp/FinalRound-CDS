@@ -27,6 +27,7 @@ using namespace cv;
 using namespace std;
 using namespace cv::ml;
 
+// Threshold
 #define LOW_HSV_BLUE Scalar(104, 148, 55)
 #define HIG_HSV_BLUE Scalar(118, 255, 255)
 
@@ -35,31 +36,23 @@ using namespace cv::ml;
 #define LOW_HSV_RED2 Scalar(170, 80, 100)
 #define HIG_HSV_RED2 Scalar(180, 255, 255)
 
-#define LOW_HSV_GREEN Scalar(34, 80, 100)
-#define HIG_HSV_GREEN Scalar(83, 255, 255)
-
-#define GREEN_MIN Scalar(34, 138, 12)
-#define GREEN_MAX Scalar(83, 246, 124)
-
 #define LOW_HSV_BLACK Scalar(0, 0, 0)
 #define HIG_HSV_BLACK Scalar(255, 255, 150)
 
+#define LOW_GRAY_BLACK Scalar 0
+#define HIG_GRAY_BLACK Scalar 30
+
 #define KERNEL_SIZE 3
-#define SIGN_SIZE 32
-#define DIF_RATIO_SIGN_WIDTH_PER_HEIGHT 0.2
-#define DIF_RATIO_SIGN_AREA 0.2
-#define MIN_SIGN_AREA 1800
+//#define SIGN_SIZE 32
+//#define DIF_RATIO_SIGN_WIDTH_PER_HEIGHT 0.2
+//#define DIF_RATIO_SIGN_AREA 0.2
+//#define MIN_SIGN_AREA 1800
+//#define TEST_DETECT_SIGN 0
+//#define ACCEPT_SIGN 1
+//#define N_SAMPLE 1
 
 #define RATIO_WIDTH_LANE_CROP 0.6
 #define RATIO_HEIGHT_LANE_CROP 0.4
-
-#define SAMPLE_READ_WAIT_TIMEOUT 1
-#define FRAME_WIDTH 320
-#define FRAME_HEIGHT 240
-#define TEST_DETECT_SIGN 0
-#define ACCEPT_SIGN 1
-#define N_SAMPLE 1
-#define ALPHA -3
 
 #define SW1_PIN 160
 #define SW2_PIN 161
@@ -67,9 +60,13 @@ using namespace cv::ml;
 #define SW4_PIN 164
 #define SENSOR 165
 
+#define SAMPLE_READ_WAIT_TIMEOUT 1
+#define FRAME_WIDTH 320
+#define FRAME_HEIGHT 240
+
 #define MIN_LANE_AREA 200
 #define MIN_RATIO_DISTANCE_LEFT_RIGHT_CENTER 0.3
-
+#define MAX_N_VERTICES_LANE_CONTOUR 50
 #define RATIO_LEFT_RIGHT_WIDTH_LANE_CROP 0.5
 #define CENTER_POINT_Y 0.2
 
@@ -84,6 +81,9 @@ using namespace cv::ml;
 
 #define THROTTLE_VAL1 35
 #define THROTTLE_VAL2 40
+
+#define ALPHA_1 2
+#define ALPHA_2 1.5
 
 // Global variables
 extern Mat orgImg, colorImg, hsvImg, grayImg, binImg;

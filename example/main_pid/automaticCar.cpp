@@ -103,15 +103,16 @@ int main(int argc, char *argv[])
             //medianBlur(colorImg, colorImg, KERNEL_SIZE);
             
             cvtColor(colorImg, hsvImg, CV_BGR2HSV);
-            //cvtColor(colorImg, grayImg, CV_BGR2GRAY);
+            cvtColor(colorImg, grayImg, CV_BGR2GRAY);
             
-            get_mask(hsvImg, binImg, false, false, true); // black
-	        bitwise_not(binImg, binImg);
+            // get_mask(hsvImg, binImg, false, false, true); // black
+	        threshold(grayImg, binImg, LOW_GRAY_BLACK, HIG_GRAY_BLACK, THRESH_BINARY);
+            bitwise_not(binImg, binImg);
 
 
             // Process lane to get theta
             LaneProcessing();
-	    printf("theta: %d\n", int(theta));            
+	        printf("theta: %d\n", int(theta));            
 
             imshow("colorImg", colorImg);
 	    imshow("binImg", binImg);

@@ -17,7 +17,7 @@ int findLargestContour(vector< vector<Point> > &contours)
     for (int i = 0; i < (int)contours.size(); ++i)
     {
         int area = contourArea(contours[i]);
-        if (area > maxArea)
+        if (area > maxArea && contours[i].size() <= MAX_N_VERTICES_LANE_CONTOUR)
         {
             i_max = i;
             maxArea = area;
@@ -201,13 +201,13 @@ void LaneProcessing()
     else if (!isLeft || !isRight || abs(int(centerLeft.x - centerRight.x)) < MIN_RATIO_DISTANCE_LEFT_RIGHT_CENTER * FRAME_WIDTH)
     {
         putText(colorImg, "Invalid distance", Point(0, 50), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);	
-        theta = getAngleLane() * ALPHA;
+        theta = getAngleLane() * ALPHA_1;
     }
     else
     {
         putText(colorImg, "2 lane", Point(0, 50), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);
         centerPoint.x = (centerLeft.x + centerRight.x) / 2;
-        theta = getTheta(carPosition, centerPoint) * ALPHA;
+        theta = getTheta(carPosition, centerPoint) * ALPHA_2;
     }
     
     // Backup
