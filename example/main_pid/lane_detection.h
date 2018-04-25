@@ -4,7 +4,7 @@
 #include "header.h"
 #include "image_processing.h"
 
-int findLargestContour(vector<vector<Point>> &contours);
+int findLargestContour(vector<vector<Point>> &contours, double &laneArea);
 void filterLane(Mat &binLaneImg, bool &isLine, int &centerX, int check);
 double getTheta(Point car, Point dst);
 double getAngleLane();

@@ -2,15 +2,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-Mat orgImg, colorImg, hsvImg, grayImg, binImg;
+Mat orgImg, colorImg, grayImg, binImg;
 double theta, preTheta;
 Point centerPoint(FRAME_WIDTH / 2, (1 - CENTER_POINT_Y) * FRAME_HEIGHT);
 Point centerLeft(0, (1 - CENTER_POINT_Y) * FRAME_HEIGHT);
 Point centerRight(0, (1 - CENTER_POINT_Y) * FRAME_HEIGHT);
-Mat binLaneImg, colorLaneImg;
+Mat binLaneImg, colorLaneImg, grayLaneImg;
 bool isLeft, isRight;
 
-int findLargestContour(vector< vector<Point> > &contours)
+int findLargestContour(vector< vector<Point> > &contours, double &laneArea)
 {
     int i_max = -1;
     float maxArea = MIN_LANE_AREA;
@@ -23,6 +23,7 @@ int findLargestContour(vector< vector<Point> > &contours)
             maxArea = area;
         }
     }
+    laneArea = maxArea;
     return i_max;
 }
 
@@ -66,22 +67,33 @@ double getTheta(Point car, Point dst)
     return atan(dx / dy) * 180 / pi;
 }
 
-double getAngleLane() 
+bool checkInsideLane(Mat &grayLane, float laneArea)
+{
+    Mat binLane;
+    threshold(grayLane, binLane, LOW_GRAY_WHITE, HIG_GRAY_WHITE, THRESH_BINARY);
+    
+    int count = countNonZero(binLane);
+    if ((count / laneArea >= ACCURACY_LANE_AREA) && (count / laneArea <= ACCURACY_LANE_AREA))
+        return true;
+    return false;
+}
+
+double getAngleLane()
 {
     vector<Vec4i> hierarchy;
     vector< vector<Point> > contours;
 
     findContours(binLaneImg, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE);
 
-    double maxArea = MIN_LANE_AREA;
-    int i_max = findLargestContour(contours);
+    double laneArea;
+    int i_max = findLargestContour(contours, laneArea);
     
     if (i_max == -1) 
         return preTheta; // not lane noisy
     
     Rect laneBound = boundingRect(contours[i_max]);
     rectangle(colorLaneImg, Point(laneBound.x, laneBound.y), Point(laneBound.x + laneBound.width, laneBound.y + laneBound.height), Scalar(255, 0, 0));    
-   
+
     Point top(binImg.cols / 2, laneBound.y), topLeft(binImg.cols / 2, laneBound.y), topRight(binImg.cols / 2, laneBound.y);
     Point bottom(binImg.cols / 2, laneBound.y + laneBound.height), bottomLeft(binImg.cols / 2, laneBound.y + laneBound.height), bottomRight(binImg.cols / 2, laneBound.y + laneBound.height);
     
@@ -116,7 +128,14 @@ double getAngleLane()
     printf("top: (%d, %d)\n", top.x, top.y);
     printf("bottom: (%d, %d)\n", bottom.x, bottom.y);
  
-    return getTheta(bottom, top);
+    double tmp_theta = getTheta(bottom, top);
+    
+    if (checkInsideLane(grayLaneImg(laneBound)))
+        tmp_theta = tmp_theta * ALPHA_1_IN;
+    else
+        tmp_theta = tmp_theta * ALPHA_1_OUT;
+
+    return tmp_theta;
 }
 
 void transform(Point2f* src_vertices, Point2f* dst_vertices, Mat& src, Mat &dst) 
@@ -151,8 +170,6 @@ void birdEye()
     line(colorLaneImg, src_vertices[1], src_vertices[2], Scalar(0, 0, 255), 3);
     line(colorLaneImg, src_vertices[2], src_vertices[3], Scalar(0, 0, 255), 3);
     line(colorLaneImg, src_vertices[3], src_vertices[0], Scalar(0, 0, 255), 3);
-   
-
 }
 
 void LaneProcessing()
@@ -162,10 +179,9 @@ void LaneProcessing()
     
     binLaneImg = binImg(laneRect);
     colorLaneImg = colorImg(laneRect);
+    grayLaneImg = grayImg(laneRect);
     
     birdEye();
-	imshow("colorLaneImg", colorLaneImg);
-	imshow("binLaneImg", binLaneImg);
 
     // Define rects to crop left and right windows from binary-lane after creating bird-view
     int xLeftRect = 0;
@@ -187,9 +203,6 @@ void LaneProcessing()
     filterLane(binRight, isRight, centerRight.x, 1);
     centerLeft.x += xLeftRect;
     centerRight.x += xRightRect;
-    
-    // imshow("Left", binLeft);
-    // imshow("Right", binRight);
 
     Point carPosition(FRAME_WIDTH / 2, FRAME_HEIGHT);
     
@@ -201,7 +214,7 @@ void LaneProcessing()
     else if (!isLeft || !isRight || abs(int(centerLeft.x - centerRight.x)) < MIN_RATIO_DISTANCE_LEFT_RIGHT_CENTER * FRAME_WIDTH)
     {
         putText(colorImg, "Invalid distance", Point(0, 50), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);	
-        theta = getAngleLane() * ALPHA_1;
+        theta = getAngleLane();
     }
     else
     {
@@ -211,9 +224,14 @@ void LaneProcessing()
     }
     
     // Backup
+    if (theta > 90)
+        theta = 90
+    if (theta < -90)
+        theta = -90
     preTheta = theta;
+
 	if (theta > -10 && theta < 10)
-	     theta = 0;
+	    theta = 0;
 
     // Draw center points
     circle(colorImg,  centerPoint, 2, Scalar(0, 0, 255), 2);
@@ -224,11 +242,10 @@ void LaneProcessing()
     circle(colorImg, centerLeft, 2, Scalar(0, 255, 0), 2);
     circle(colorImg, centerRight, 2, Scalar(0, 255, 0), 2);
 
-    
-    
     putText(colorImg, "Theta " + to_string(int(theta)) , Point(0, 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, Scalar(255, 255, 0), 1, CV_AA);
     
     imshow("binLaneImg", binLaneImg);
+	imshow("colorLaneImg", colorLaneImg);
 }
 
 void analyzeFrame(const VideoFrameRef &frame_color, Mat &color_img)

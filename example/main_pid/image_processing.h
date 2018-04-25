@@ -4,7 +4,7 @@
 #include "header.h"
 #include "image_processing.h"
 
-void get_mask(const Mat &hsv, Mat &mask, bool blue, bool red, bool black);
+void get_hsv_mask(const Mat &hsv, Mat &mask, bool blue, bool red, bool black, bool white);
 void hist_equalize(Mat &img);
 
 

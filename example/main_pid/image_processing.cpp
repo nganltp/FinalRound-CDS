@@ -1,6 +1,6 @@
 #include "image_processing.h"
 
-void get_mask(const Mat &hsv, Mat &mask, bool blue, bool red, bool black)
+void get_hsv_mask(const Mat &hsv, Mat &mask, bool blue, bool red, bool black, bool white)
 {
 	mask = Mat::zeros(hsv.rows, hsv.cols, CV_8UC1);
 
@@ -24,6 +24,11 @@ void get_mask(const Mat &hsv, Mat &mask, bool blue, bool red, bool black)
         inRange(hsv, LOW_HSV_BLACK, HIG_HSV_BLACK, tmp_mask);
 		bitwise_or(mask, tmp_mask, mask);
     }
+	if (white)
+	{
+		inRange(hsv, LOW_HSV_WHITE, HIG_HSV_WHITE, tmp_mask);
+		bitwise_or(mask, tmp_mask, mask);
+	}
 
 	Mat kernel = Mat::ones(KERNEL_SIZE, KERNEL_SIZE, CV_8UC1);
 
